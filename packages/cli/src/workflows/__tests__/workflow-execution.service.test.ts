@@ -147,10 +147,11 @@ describe('WorkflowExecutionService', () => {
 			const userId = 'user-id';
 			const user = mock<User>({ id: userId });
 			const node = mock<INode>();
+			const destinationNode = { nodeName: node.name, mode: 'inclusive' as const };
 			const runPayload = mock<WorkflowRequest.ManualRunPayload>({
 				workflowData: { nodes: [node] },
 				startNodes: [],
-				destinationNode: node.name,
+				destinationNode,
 				agentRequest: undefined,
 			});
 
@@ -163,7 +164,7 @@ describe('WorkflowExecutionService', () => {
 			const result = await workflowExecutionService.executeManually(runPayload, user);
 
 			expect(workflowRunner.run).toHaveBeenCalledWith({
-				destinationNode: { nodeName: runPayload.destinationNode, mode: 'inclusive' },
+				destinationNode,
 				executionMode: 'manual',
 				runData: undefined,
 				pinData: runPayload.workflowData.pinData,
@@ -197,6 +198,7 @@ describe('WorkflowExecutionService', () => {
 				const userId = 'user-id';
 				const user = mock<User>({ id: userId });
 				const runPayload = mock<WorkflowRequest.ManualRunPayload>({
+					destinationNode: undefined,
 					startNodes: [],
 					workflowData: {
 						pinData: {
@@ -213,7 +215,7 @@ describe('WorkflowExecutionService', () => {
 				const result = await workflowExecutionService.executeManually(runPayload, user);
 
 				expect(workflowRunner.run).toHaveBeenCalledWith({
-					destinationNode: { nodeName: runPayload.destinationNode, mode: 'inclusive' },
+					destinationNode: undefined,
 					executionMode: 'manual',
 					runData: runPayload.runData,
 					pinData: runPayload.workflowData.pinData,
