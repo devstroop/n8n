@@ -251,8 +251,9 @@ export class License implements LicenseProvider {
 		this.logger.debug('License shut down');
 	}
 
-	isLicensed(feature: BooleanLicenseFeature) {
-		return this.manager?.hasFeatureEnabled(feature) ?? false;
+	isLicensed(_feature: BooleanLicenseFeature) {
+		// MODIFIED: Bypass license check - all features enabled
+		return true;
 	}
 
 	/** @deprecated Use `LicenseState.isDynamicCredentialsLicensed` instead. */
@@ -375,6 +376,13 @@ export class License implements LicenseProvider {
 	}
 
 	getValue<T extends keyof FeatureReturnType>(feature: T): FeatureReturnType[T] {
+		// MODIFIED: Return unlimited values for all quotas and enterprise plan name
+		if (String(feature).startsWith('quota:')) {
+			return UNLIMITED_LICENSE_QUOTA as FeatureReturnType[T];
+		}
+		if (feature === 'planName') {
+			return 'Enterprise' as FeatureReturnType[T];
+		}
 		return this.manager?.getFeatureValue(feature) as FeatureReturnType[T];
 	}
 

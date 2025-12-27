@@ -349,7 +349,8 @@ export class FrontendService {
 				enabled: false,
 				enforced: false,
 			},
-			hideUsagePage: this.globalConfig.hideUsagePage,
+			// MODIFIED: Always hide usage page
+			hideUsagePage: true,
 			license: {
 				consumerId: 'unknown',
 				environment: this.globalConfig.license.tenantId === 1 ? 'production' : 'staging',
@@ -471,54 +472,49 @@ export class FrontendService {
 		this.settings.license.consumerId = this.license.getConsumerId();
 
 		// refresh enterprise status
+		// MODIFIED: Bypass license checks - all enterprise features unlocked
 		Object.assign(this.settings.enterprise, {
-			sharing: this.license.isSharingEnabled(),
-			logStreaming: this.license.isLogStreamingEnabled(),
-			ldap: this.license.isLdapEnabled(),
-			saml: this.license.isSamlEnabled(),
-			oidc: this.licenseState.isOidcLicensed(),
-			mfaEnforcement: this.licenseState.isMFAEnforcementLicensed(),
-			provisioning: false, // temporarily disabled until this feature is ready for release
-			advancedExecutionFilters: this.license.isAdvancedExecutionFiltersEnabled(),
-			variables: this.license.isVariablesEnabled(),
-			sourceControl: this.license.isSourceControlLicensed(),
-			externalSecrets: this.license.isExternalSecretsEnabled(),
-			showNonProdBanner: this.license.isLicensed(LICENSE_FEATURES.SHOW_NON_PROD_BANNER),
-			debugInEditor: this.license.isDebugInEditorLicensed(),
-			binaryDataS3: isS3Available && isS3Selected && isS3Licensed,
-			workerView: this.license.isWorkerViewLicensed(),
-			advancedPermissions: this.license.isAdvancedPermissionsLicensed(),
-
-			workflowDiffs: this.licenseState.isWorkflowDiffsLicensed(),
-			namedVersions: this.license.isLicensed(LICENSE_FEATURES.NAMED_VERSIONS),
-			customRoles: this.licenseState.isCustomRolesLicensed(),
-			personalSpacePolicy: this.licenseState.isPersonalSpacePolicyLicensed(),
-			dataRedaction: this.licenseState.isDataRedactionLicensed(),
+			sharing: true,
+			logStreaming: true,
+			ldap: true,
+			saml: true,
+			oidc: true,
+			mfaEnforcement: true,
+			provisioning: true,
+			advancedExecutionFilters: true,
+			variables: true,
+			sourceControl: true,
+			externalSecrets: true,
+			showNonProdBanner: false,
+			debugInEditor: true,
+			binaryDataS3: isS3Available && isS3Selected,
+			workerView: true,
+			advancedPermissions: true,
+			apiKeyScopes: true,
+			workflowDiffs: true,
+			namedVersions: true,
+			customRoles: true,
+			personalSpacePolicy: true,
+			dataRedaction: true,
 		});
 
-		if (this.license.isLdapEnabled()) {
-			Object.assign(this.settings.sso.ldap, {
-				loginLabel: this.globalConfig.sso.ldap.loginLabel,
-				loginEnabled: this.globalConfig.sso.ldap.loginEnabled,
-			});
-		}
+		// MODIFIED: Always enable SSO settings (bypass license check)
+		Object.assign(this.settings.sso.ldap, {
+			loginLabel: this.globalConfig.sso.ldap.loginLabel,
+			loginEnabled: this.globalConfig.sso.ldap.loginEnabled,
+		});
 
-		if (this.license.isSamlEnabled()) {
-			Object.assign(this.settings.sso.saml, {
-				loginLabel: getSamlLoginLabel(),
-				loginEnabled: this.globalConfig.sso.saml.loginEnabled,
-			});
-		}
+		Object.assign(this.settings.sso.saml, {
+			loginLabel: getSamlLoginLabel(),
+			loginEnabled: this.globalConfig.sso.saml.loginEnabled,
+		});
 
-		if (this.licenseState.isOidcLicensed()) {
-			Object.assign(this.settings.sso.oidc, {
-				loginEnabled: this.globalConfig.sso.oidc.loginEnabled,
-			});
-		}
+		Object.assign(this.settings.sso.oidc, {
+			loginEnabled: this.globalConfig.sso.oidc.loginEnabled,
+		});
 
-		if (this.license.isVariablesEnabled()) {
-			this.settings.variables.limit = this.license.getVariablesLimit();
-		}
+		// MODIFIED: Always enable unlimited variables
+		this.settings.variables.limit = -1;
 
 		if (this.communityPackagesService) {
 			this.settings.missingPackages = this.communityPackagesService.hasMissingPackages;
@@ -564,12 +560,18 @@ export class FrontendService {
 
 		this.settings.binaryDataMode = this.binaryDataConfig.mode;
 
-		this.settings.enterprise.projects.team.limit = this.license.getTeamProjectLimit();
+		// MODIFIED: Unlimited team projects
+		this.settings.enterprise.projects.team.limit = -1;
 
-		this.settings.folders.enabled = this.license.isFoldersEnabled();
+		// MODIFIED: Enable folders without license
+		this.settings.folders.enabled = true;
+
+		// MODIFIED: Unlimited variables
+		this.settings.variables.limit = -1;
 
 		// Refresh evaluation settings
-		this.settings.evaluation.quota = this.licenseState.getMaxWorkflowsWithEvaluations();
+		// MODIFIED: Unlimited evaluations
+		this.settings.evaluation.quota = -1;
 
 		// Refresh environment feature flags
 		this.settings.envFeatureFlags = this.collectEnvFeatureFlags();
